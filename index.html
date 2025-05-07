@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Demo Conversational Bot with Wiki</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background: #f5f5f5;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    header {
+      background: #007bff;
+      color: #fff;
+      padding: 12px 24px;
+      text-align: center;
+      font-size: 1.25rem;
+      font-weight: bold;
+    }
+    .container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    #chat-panel {
+      width: 50%;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #ddd;
+      background: #fff;
+    }
+    #wiki-panel {
+      width: 50%;
+      padding: 16px;
+      overflow-y: auto;
+      background: #fafafa;
+    }
+    #chat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #messages {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+    }
+    .message { margin: 8px 0; }
+    .bot { text-align: left; }
+    .user { text-align: right; }
+    .bubble {
+      display: inline-block;
+      padding: 8px 12px;
+      border-radius: 16px;
+      max-width: 80%;
+    }
+    .bot .bubble { background: #e0e0e0; color: #000; }
+    .user .bubble { background: #007bff; color: #fff; }
+    #options {
+      padding: 8px 16px;
+      border-top: 1px solid #ddd;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+      background: #fff;
+    }
+    .option-btn {
+      flex: 1;
+      padding: 8px 12px;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .option-btn:hover { background: #0056b3; }
+    #restart-btn { flex: 0 0 auto; background: #6c757d; }
+    #restart-btn:hover { background: #5a6268; }
+    /* Wiki styles */
+    #wiki-panel h2 { margin-top: 0; }
+    #wiki-content { line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <header>DRONAHQ Learning Tool for Sales</header>
+  <div class="container">
+    <div id="chat-panel">
+      <div id="chat">
+        <div id="messages"></div>
+      </div>
+      <div id="options"></div>
+    </div>
+    <div id="wiki-panel">
+      <h2>React/Angular Key Pitfalls & Benefits</h2>
+      <div id="wiki-content">
+        <p><strong>Component Sprawl:</strong> Managing numerous custom components and states leads to complexity and maintenance headaches.</p>
+        <p><strong>Version Drift:</strong> Framework upgrades often break existing code, requiring time-consuming refactors.</p>
+        <p><strong>Onboarding Friction:</strong> New hires need deep understanding of project-specific patterns, slowing delivery.</p>
+        <p><strong>Visual Development:</strong> DronaHQ offers a canvas with 150+ prebuilt UI components, ensuring consistency and speeding up building.</p>
+        <p><strong>Auto Upgrades:</strong> Version control and framework upgrades are handled behind the scenes, eliminating manual merges.</p>
+        <p><strong>Faster Time to Market:</strong> Ship admin tools 10× faster with drag‑drop assembly and zero boilerplate.</p>
+      </div>
+    </div>
+  </div>
+  <script>
+    const conversation = {
+      nodes: {
+        start: {
+          message: "Hi! Quick question: Is your team building admin-panels or back-office apps on top of your APIs for Ops (internal or partner apps)?",
+          options: [
+            { label: "Yes", next: "approach" },
+            { label: "No", next: "planningInternal" }
+          ]
+        },
+        approach: {
+          message: "Great—what’s your current approach?",
+          options: [
+            { label: "Coding everything from scratch", next: "pocQuestion" },
+            { label: "Using a low-code/AI platform", next: "lowCodeType" }
+          ]
+        },
+        pocQuestion: {
+          message: "Have you ever PoC’d low-code tools to speed things up?",
+          options: [
+            { label: "Yes", next: "pocFollowUp1" },
+            { label: "No", next: "frameworks" }
+          ]
+        },
+        pocFollowUp1: {
+          message: "What worked and what didn’t work in your POC?",
+          options: [ { label: "Okay", next: "pocFollowUp2" } ]
+        },
+        pocFollowUp2: {
+          message: "Did your engineers build production-grade apps or just prototypes?",
+          options: [ { label: "Got it", next: "pocFollowUp3" } ]
+        },
+        pocFollowUp3: {
+          message: "When did you run that POC— a year ago, two years ago?",
+          options: [ { label: "Thanks", next: "pitchYes" } ]
+        },
+        pitchYes: {
+          message: "Pitch: With DronaHQ you can build production-grade admin panels and back-office apps in **hours**—not weeks—plus built-in version control and zero-touch maintenance, just like Purplle and CleverTap.",
+          options: [ { label: "Schedule a quick POC?", next: "ctaYes" } ]
+        },
+        ctaYes: {
+          message: "CTA: Would you like to schedule a quick POC to validate these improvements in your environment?",
+          options: []
+        },
+        frameworks: {
+          message: "What code frameworks or libraries are you using?",
+          options: [
+            { label: "Django Admin, Forest Admin, etc.", next: "followE1a" },
+            { label: "React/Angular-style frameworks", next: "pitfallsE1b" },
+            { label: "A home-grown design system", next: "followE1c1" }
+          ]
+        },
+        followE1a: {
+          message: "Which UI customizations have you struggled to implement?",
+          options: [ { label: "Let me tell you…", next: "followE3a" } ]
+        },
+        followE3a: {
+          message: "How long does it take your engineers to build those by hand?",
+          options: [ { label: "Understood", next: "pitchE1a" } ]
+        },
+        pitchE1a: {
+          message: "Pitch: DronaHQ gives you 100+ pre-built, themeable UI components you can drag-drop and extend with JS/CSS—zero hand-coding required.",
+          options: [ { label: "See a 2 min custom demo?", next: "ctaE1a" } ]
+        },
+        ctaE1a: {
+          message: "CTA: Want to see a custom component built in 2 minutes?",
+          options: []
+        },
+        pitfallsE1b: {
+          message: `Pitfalls of React/Angular:
+
+• Component Sprawl: As your codebase grows, managing dozens of custom components, states, and styles becomes a maintenance nightmare.
+
+• Version Drift: Upgrading framework versions often breaks custom code and requires manual refactoring.
+
+• Onboarding Friction: New engineers spend weeks learning your project-specific patterns, slowing down feature delivery.`,
+          options: [ { label: "Tell me more", next: "pitchE1b" } ]
+        },
+        pitchE1b: {
+          message: `Pitch: With DronaHQ you get a visual canvas of 150+ prebuilt, themeable UI components, auto-managed version upgrades, and built-in state management—no manual merges or refactors. Your team ships admin tools 10× faster, onboarding is instantaneous, and framework upgrades happen behind the scenes.`,
+          options: [ { label: "Compare case studies?", next: "ctaE1b" } ]
+        },
+        ctaE1b: {
+          message: "CTA: Want to see how peers moved off React/Angular to DronaHQ for zero-maintenance?",
+          options: []
+        },
+        followE1c1: {
+          message: "How many web components does your home-grown system cover?",
+          options: [ { label: "It varies…", next: "followE1c2" } ]
+        },
+        followE1c2: {
+          message: "Does it include data connectors?",
+          options: [ { label: "Some do", next: "followE1c3" }, { label: "None", next: "followE1c3" } ]
+        },
+        followE1c3: {
+          message: "How many engineers are on your team?",
+          options: [ { label: "X engineers", next: "followE1c4" } ]
+        },
+        followE1c4: {
+          message: "Do you staff support engineers to help the library be adopted?",
+          options: [ { label: "Yes/No", next: "pitchE1c" } ]
+        },
+        pitchE1c: {
+          message: "Pitch: DronaHQ low-code platform comes with 150+ web components and 70+ connectors; fully documented; 24×7 dev-on-demand team; state-of-the-art roadmap; 10× better switch at half your current y-o-y price.",
+          options: [ { label: "Try it out?", next: "ctaE1c" } ]
+        },
+        ctaE1c: {
+          message: "CTA: Would you like to try it out?",
+          options: []
+        },
+        lowCodeType: {
+          message: "Which type of low-code platform are you using?",
+          options: [
+            { label: "Zapier/Integromat/Workato (automation)", next: "pitchLC1" },
+            { label: "Airtable/Glide/Softr (db apps)", next: "pitchLC1" },
+            { label: "Kissflow/Appian/Pega (workflow)", next: "pitchLC1" },
+            { label: "Retool/Appsmith/ToolJet/UI Bakery (UI)", next: "pitchLC2" },
+            { label: "OutSystems/Mendix (full-stack dev)", next: "pitchLC3" }
+          ]
+        },
+        pitchLC1: {
+          message: "Pitch: Automation tools don’t deliver rich UI frontends at speed. DronaHQ specializes in full-featured frontend apps on top of REST APIs/databases.",
+          options: [ { label: "Show me a demo?", next: "ctaLC1" } ]
+        },
+        ctaLC1: { message: "CTA: Can I demo how DronaHQ builds robust UIs in hours?", options: [] },
+        pitchLC2: {
+          message: "Pitch: DronaHQ offers single build for web & mobile; richer controls & connectors; flexible pricing; plus 24×7 dev-on-demand support.",
+          options: [ { label: "Side-by-side compare?", next: "ctaLC2" } ]
+        },
+        ctaLC2: { message: "CTA: Would you like to compare side-by-side?", options: [] },
+        pitchLC3: {
+          message: "Pitch: Full-stack platforms often feel like overkill for simple internal tools. DronaHQ gives you just-right frontend capabilities with minimal overhead.",
+          options: [ { label: "Lightweight demo?", next: "ctaLC3" } ]
+        },
+        ctaLC3: { message: "CTA: Interested in a lightweight demo?", options: [] },
+        planningInternal: {
+          message: "Got it—are you planning to build any internal tools soon?",
+          options: [
+            { label: "Yes", next: "buildSoon" },
+            { label: "No", next: "sendGuide" }
+          ]
+        },
+        buildSoon: {
+          message: "Building from scratch can eat up weeks of engineering time.",
+          options: [ { label: "Let me demo", next: "ctaBuildSoon" } ]
+        },
+        ctaBuildSoon: { message: "Let me demo how DronaHQ speeds this up.", options: [] },
+        sendGuide: { message: "Understood—can I send you a brief guide on best practices for internal tools?", options: [] }
+      },
+      startNode: "start"
+    };
+
+    let currentNode = conversation.startNode;
+
+    function showNode(key) {
+      const node = conversation.nodes[key];
+      addBotMessage(node.message);
+      renderOptions(node.options);
+    }
+
+    function addBotMessage(text) {
+      const msgEl = document.createElement('div');
+      msgEl.className = 'message bot';
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.innerHTML = text;
+      msgEl.appendChild(bubble);
+      document.getElementById('messages').appendChild(msgEl);
+      scrollToBottom();
+    }
+
+    function addUserMessage(text) {
+      const msgEl = document.createElement('div');
+      msgEl.className = 'message user';
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.innerText = text;
+      msgEl.appendChild(bubble);
+      document.getElementById('messages').appendChild(msgEl);
+      scrollToBottom();
+    }
+
+    function renderOptions(options) {
+      const optsEl = document.getElementById('options');
+      optsEl.innerHTML = '';
+      const restart = document.createElement('button');
+      restart.id = 'restart-btn';
+      restart.className = 'option-btn';
+      restart.innerText = 'Restart';
+      restart.onclick = restartConversation;
+      optsEl.appendChild(restart);
+
+      if (options.length === 0) {
+        const endNote = document.createElement('div');
+        endNote.innerHTML = '<em>End of conversation.</em>';
+        optsEl.appendChild(endNote);
+        return;
+      }
+
+      options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerText = opt.label;
+        btn.onclick = () => {
+          addUserMessage(opt.label);
+          setTimeout(() => showNode(opt.next), 300);
+        };
+        optsEl.appendChild(btn);
+      });
+    }
+
+    function restartConversation() {
+      const msgs = document.getElementById('messages');
+      msgs.innerHTML = '';
+      currentNode = conversation.startNode;
+      showNode(currentNode);
+      msgs.scrollTop = 0;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function scrollToBottom() {
+      const msgs = document.getElementById('messages');
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      showNode(currentNode);
+    });
+  </script>
+</body>
+</html>
